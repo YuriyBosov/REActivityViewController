@@ -23,6 +23,6 @@ Pod::Spec.new do |s|
   s.dependency 'DEFacebookComposeViewController', '~> 1.0.0'
   s.dependency 'REComposeViewController', '~> 2.0.3'
   s.dependency 'SFHFKeychainUtils', '~> 0.0.1'
-  s.dependency 'PocketAPI', :git => 'https://github.com/YuriyBosov/Pocket-ObjC-SDK', :tag => 'sdk/1.0.2'
+  s.dependency 'PocketAPI'
   s.dependency 'AFXAuthClient', '~> 1.0.5'
 end
