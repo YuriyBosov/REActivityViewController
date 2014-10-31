@@ -10,7 +10,7 @@ Pod::Spec.new do |s|
 
   s.platform = :ios, '7.0'
   s.requires_arc = true
-  s.source_files = 'REActivityViewController'
+  s.source_files = 'REActivityViewController.{h,m}'
   s.public_header_files = 'REActivityViewController/*.h'
   s.resources = "REActivityViewController/REActivityViewController.bundle", "REActivityViewController/Localizations/*.lproj"
 
