@@ -10,7 +10,7 @@ Pod::Spec.new do |s|
 
   s.platform = :ios, '7.0'
   s.requires_arc = true
-  s.source_files = 'REActivityViewController.{h,m}'
+  s.source_files = 'REActivityViewController'
   s.public_header_files = 'REActivityViewController/*.h'
   s.resources = "REActivityViewController/REActivityViewController.bundle", "REActivityViewController/Localizations/*.lproj"
 
@@ -19,7 +19,7 @@ Pod::Spec.new do |s|
   s.ios.weak_frameworks = 'Social'
 
   s.dependency 'AFNetworking', '~> 1.3'
-  s.dependency 'Facebook-iOS-SDK', '~> 3.5.1'
+  s.dependency 'Facebook-iOS-SDK', #'~> 3.5.1'
   s.dependency 'DEFacebookComposeViewController', '~> 1.0.0'
   s.dependency 'REComposeViewController', '~> 2.0.3'
   s.dependency 'SFHFKeychainUtils', '~> 0.0.1'
