@@ -28,6 +28,12 @@
 #import "REVKActivityViewController.h"
 #import "AFNetworking.h"
 
+@interface REVKActivity ()
+
+- (void)shareOnWall:(NSString *)text photoId:(NSString *)wallPhotoId url:(NSString*)url completion:(void (^)(void))completion;
+
+@end
+
 @implementation REVKActivity
 
 - (id)initWithClientId:(NSString *)clientId
@@ -65,22 +71,20 @@
 - (void)share
 {
     __typeof(&*self) __weak weakSelf = self;
-
+    
     NSDictionary *userInfo = self.userInfo ? self.userInfo : self.activityViewController.userInfo;
-
+    
     NSString *text = [userInfo objectForKey:@"text"];
     NSURL *url = [userInfo objectForKey:@"url"];
     UIImage *image = [userInfo objectForKey:@"image"];
     
     NSString *textToShare;
-    if (text && !url)
-        textToShare = text;
     
     if (!text && url)
+    {
         textToShare = url.absoluteString;
-    
-    if (text && url)
-        textToShare = [NSString stringWithFormat:@"%@ %@", text, url.absoluteString];
+        url = nil;
+    }
     
     REComposeViewController *controller = [[REComposeViewController alloc] init];
     controller.title = NSLocalizedStringFromTable(@"activity.VKontakte.dialog.title", @"REActivityViewController", @"VKontakte");
@@ -91,13 +95,16 @@
         controller.hasAttachment = YES;
         controller.attachmentImage = image;
     }
+    else if (url) {
+        controller.hasAttachment = YES;
+    }
     controller.completionHandler = ^(REComposeViewController *composeViewController, REComposeResult result) {
         [composeViewController dismissViewControllerAnimated:YES completion:nil];
         if (result == REComposeResultPosted) {
             if (image) {
                 [weakSelf shareText:composeViewController.text image:image];
             } else {
-                [weakSelf shareText:composeViewController.text];
+                [weakSelf shareText:composeViewController.text url:[url absoluteString]];
             }
         }
     };
@@ -129,8 +136,8 @@
     NSData *imageData = UIImageJPEGRepresentation(image, 0.75f);
     NSMutableURLRequest *request = [httpClient multipartFormRequestWithMethod:@"POST" path:@"" parameters:nil
                                                     constructingBodyWithBlock:^(id <AFMultipartFormData>formData) {
-        [formData appendPartWithFileData:imageData name:@"photo" fileName:@"photo.jpg" mimeType:@"image/jpg"];
-    }];
+                                                        [formData appendPartWithFileData:imageData name:@"photo" fileName:@"photo.jpg" mimeType:@"image/jpg"];
+                                                    }];
     
     void (^parseJSON)(id JSON) = ^(id JSON){
         if (success)
@@ -158,17 +165,19 @@
     [operation start];
 }
 
-- (void)shareOnWall:(NSString *)text photoId:(NSString *)wallPhotoId completion:(void (^)(void))completion
+- (void)shareOnWall:(NSString *)text photoId:(NSString *)wallPhotoId url:(NSString*)url completion:(void (^)(void))completion
 {
     NSString *serverURL;
     
     if (wallPhotoId) {
         serverURL = [NSString stringWithFormat:@"https://api.vk.com/method/wall.post?owner_id=%@&access_token=%@&message=%@&attachment=%@", self.ownerId, self.token, [self URLEncodedString:text], wallPhotoId];
+    } else if (url) {
+        serverURL = [NSString stringWithFormat:@"https://api.vk.com/method/wall.post?owner_id=%@&access_token=%@&message=%@&attachment=%@", self.ownerId, self.token, [self URLEncodedString:text], [self URLEncodedString:url]];
     } else {
         serverURL = [NSString stringWithFormat:@"https://api.vk.com/method/wall.post?owner_id=%@&access_token=%@&message=%@", self.ownerId, self.token, [self URLEncodedString:text]];
     }
     NSURLRequest *request = [NSURLRequest requestWithURL:[NSURL URLWithString:serverURL]];
-        
+    
     
     AFJSONRequestOperation *operation = [AFJSONRequestOperation JSONRequestOperationWithRequest:request success:^(NSURLRequest *request, NSHTTPURLResponse *response, id JSON) {
         if (completion)
@@ -184,15 +193,21 @@
     [self requestPhotoUploadURLWithSuccess:^(NSString *uploadURL) {
         [weakSelf uploadImage:image toURL:uploadURL success:^(NSString *hash, NSString *photo, NSString *server) {
             [weakSelf saveImageToWallWithHash:hash photo:photo server:server success:^(NSString *wallPhotoId) {
-                [weakSelf shareOnWall:text photoId:wallPhotoId completion:nil];
+                [weakSelf shareOnWall:text photoId:wallPhotoId url:nil completion:nil];
             }];
         }];
     }];
 }
 
+- (void)shareText:(NSString *)text url:(NSString*)url
+{
+    [self shareOnWall:text photoId:nil url:url completion:nil];
+}
+
+
 - (void)shareText:(NSString *)text
 {
-    [self shareOnWall:text photoId:nil completion:nil];
+    [self shareOnWall:text photoId:nil url:nil completion:nil];
 }
 
 #pragma mark -
